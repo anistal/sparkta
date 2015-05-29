@@ -145,13 +145,14 @@ trait MongoDbDAO extends Closeable {
   }
 
   protected def getUpdate(mapOperations: Map[Seq[(String, Any)], String],
+                          objects: Seq[Imports.DBObject],
                           identitiesField: Seq[Imports.DBObject]): Imports.DBObject = {
     val combinedOptions: Map[Seq[(String, Any)], casbah.Imports.JSFunction] = mapOperations ++
       Map((Seq((LANGUAGE_FIELD_NAME, language)), "$set")) ++ {
       if (identitiesField.size > 0) {
         Map((Seq(Bucketer.identityField.id -> identitiesField), "$set"))
       } else Map()
-    }
+    }  ++ Map((Seq(("fields", objects)), "$set"))
     combinedOptions.groupBy(_._2)
       .map { case (name, value) => MongoDBObject(name -> MongoDBObject(value.flatMap(f => f._1).toSeq: _*)) }
       .reduce(_ ++ _)

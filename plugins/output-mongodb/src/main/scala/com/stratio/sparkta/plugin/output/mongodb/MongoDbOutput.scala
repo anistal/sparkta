@@ -17,9 +17,11 @@
 package com.stratio.sparkta.plugin.output.mongodb
 
 import java.io.{Serializable => JSerializable}
+import com.mongodb.DBObject
+
 import scala.util.Try
 
-import com.mongodb.casbah.commons.MongoDBObject
+import com.mongodb.casbah.commons.{Imports, MongoDBObject}
 import com.mongodb.casbah.commons.conversions.scala._
 import org.apache.spark.SparkContext
 import org.apache.spark.broadcast.Broadcast
@@ -84,13 +86,17 @@ class MongoDbOutput(keyName: String,
         val eventTimeObject = getTime(metricOp).map(timeBucket.get -> _)
         val identitiesField = metricOp.rollupKey.filter(_.bucketType.id == Bucketer.identityField.id)
           .map(dimVal => MongoDBObject(dimVal.dimension.name -> dimVal.value))
+
+        val field = metricOp.rollupKey
+          .map(dimVal => MongoDBObject(dimVal.dimension.name -> dimVal.value))
+
         val mapOperations = getOperations(metricOp.aggregations.toSeq, operationTypes)
           .groupBy { case (writeOp, op) => writeOp }
           .mapValues(operations => operations.map { case (writeOp, op) => op })
           .map({ case (op, seq) => getSentence(op, seq) })
 
         bulkOperation.find(getFind(idFieldName, eventTimeObject, metricOp.rollupKey, timeBucket))
-          .upsert().updateOne(getUpdate(mapOperations, identitiesField))
+          .upsert().updateOne(getUpdate(mapOperations, field, identitiesField))
       })
       bulkOperation.execute()
     })

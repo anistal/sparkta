@@ -46,6 +46,6 @@ class MinOperator(properties: Map[String, JSerializable]) extends Operator(prope
 }
 
 private object MinOperator {
-  val SOME_ZERO = Some(0d)
-  val SOME_ZERO_NUMBER = Some(0d.asInstanceOf[Number])
+  val SOME_ZERO = Some(Double.MaxValue)
+  val SOME_ZERO_NUMBER = Some(Double.MaxValue.asInstanceOf[Number])
 }
