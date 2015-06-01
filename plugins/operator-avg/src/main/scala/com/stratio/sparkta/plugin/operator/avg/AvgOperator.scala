@@ -39,7 +39,12 @@ class AvgOperator(properties: Map[String, JSerializable]) extends Operator(prope
 
   override def processReduce(values: Iterable[Option[Any]]): Option[Double] = {
     values.size match {
-      case (nz) if (nz != 0) => Some(values.map(_.get.asInstanceOf[Number].doubleValue()).sum / values.size)
+      case (nz) if (nz != 0) => {
+        val sum = values.toSeq.flatten.asInstanceOf[Seq[Double]].sum
+        val count= values.toSeq.flatten.size
+        Some(sum/count)
+      }
+//        Some((values.flatMap(_).sum.toString.tod / values.flatMap(_).size))
       case _ => AvgOperator.SOME_ZERO
     }
   }
@@ -47,6 +52,6 @@ class AvgOperator(properties: Map[String, JSerializable]) extends Operator(prope
 }
 
 private object AvgOperator {
-  val SOME_ZERO = Some(0d)
-  val SOME_ZERO_NUMBER = Some(0d.asInstanceOf[Number])
+  val SOME_ZERO = None
+  val SOME_ZERO_NUMBER = None
 }

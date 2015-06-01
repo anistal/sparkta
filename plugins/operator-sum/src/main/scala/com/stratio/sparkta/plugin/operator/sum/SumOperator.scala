@@ -16,8 +16,9 @@
 package com.stratio.sparkta.plugin.operator.sum
 
 import java.io.{Serializable => JSerializable}
-import com.stratio.sparkta.sdk._
+
 import com.stratio.sparkta.sdk.ValidatingPropertyMap._
+import com.stratio.sparkta.sdk._
 
 import scala.util.Try
 

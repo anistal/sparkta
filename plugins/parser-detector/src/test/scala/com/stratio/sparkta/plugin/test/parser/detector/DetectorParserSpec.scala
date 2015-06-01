@@ -28,7 +28,7 @@ class DetectorParserSpec extends WordSpecLike {
     "parse to map with real json" in {
       val myJson1 =
         """{"operation":"insert","streamName":"detectorStream","session_id":"1432534720229",
-          |"request_id":"1432558355402","request":"","timestamp":1432558355402,"columns":[{"column":"id",
+          |"request_id":1432558355402,"request":"","timestamp":1432558355402,"columns":[{"column":"id",
           |"value":"714098557795172482"},{"column":"connection_id","value":"714098345336897663"},
           |{"column":"event_index","value":"147"},{"column":"asset","value":"351777046962500"},
           |{"column":"recorded_at","value":"1432558321000"},{"column":"recorded_at_ms","value":"1432558321000"},
@@ -48,7 +48,7 @@ class DetectorParserSpec extends WordSpecLike {
           |{"column":"alarm_lat"},{"column":"alarm_lon"},{"column":"alarm_sat_number"},{"column":"alarm_speed"},
           |{"column":"alarm_direction"},{"column":"alarm_modem_csq"},{"column":"alarm_cell_id"},
           |{"column":"alarm_ignition"},{"column":"alarm_batt_tension"},{"column":"alarm_detl"},{"column":"odometer",
-          |"value":"33000.89"},{"column":"ignition"},{"column":"volt_batt_tension"},{"column":"vel_timestamp"},
+          |"value":33000.89},{"column":"ignition"},{"column":"volt_batt_tension"},{"column":"vel_timestamp"},
           |{"column":"vel_0"},{"column":"vel_1"},{"column":"vel_2"},{"column":"vel_3"},{"column":"vel_4"},
           |{"column":"vel_5"},{"column":"vel_6"},{"column":"vel_7"},{"column":"vel_avg"},
           |{"column":"consumption_timestamp_0"},{"column":"consumption_lat_0"},{"column":"consumption_lon_0"},

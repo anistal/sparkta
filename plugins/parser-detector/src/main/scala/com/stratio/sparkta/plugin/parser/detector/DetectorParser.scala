@@ -26,11 +26,11 @@ class DetectorParser(properties: Map[String, Serializable]) extends Parser(prope
 
   def addGeoTo(event: Map[String, Serializable]): Map[String, Serializable] = {
     val lat = event.get("lat") match {
-      case (Some(_: String)) => if (event.get("lat") != Some("")) event.get("lat") else None
+      case (Some(_: Serializable)) => if (event.get("lat") != Some("")) event.get("lat") else None
       case (_) => None
     }
     val lon = event.get("lon") match {
-      case (Some(_: String)) => if (event.get("lon") != Some("")) event.get("lon") else None
+      case (Some(_: Serializable)) => if (event.get("lon") != Some("")) event.get("lon") else None
       case (_) => None
     }
     val mapToReturn = (lat, lon) match {
@@ -42,12 +42,13 @@ class DetectorParser(properties: Map[String, Serializable]) extends Parser(prope
     else Map()
   }
 
-  def stringDimensionToDouble(dimensionName: String, newDimensionName: String, columnMap: Map[String, String]):
+  def stringDimensionToDouble(dimensionName: String, newDimensionName: String, columnMap: Map[String, Any]):
   Map[String, Serializable] = {
     columnMap.get(dimensionName) match {
-      case Some("") => Map()
+      case Some(x:Double) => Map(newDimensionName-> x)
+      case Some(x:String) => if(x=="") Map() else Map(newDimensionName->x.toDouble)
+      case Some(_)=> Map(newDimensionName -> columnMap.get(dimensionName).getOrElse("0").toString.toDouble)
       case None => Map()
-      case Some(_)=> Map(newDimensionName -> columnMap.get(dimensionName).getOrElse("0").toDouble)
     }
   }
 
@@ -64,9 +65,14 @@ class DetectorParser(properties: Map[String, Serializable]) extends Parser(prope
           case s: String => s
           case b: Array[Byte] => new String(b)
         }
-        val tsExp = """(:)([^"{\[][\d.]*)""".r
-        val res = tsExp replaceFirstIn(result, """$1"$2"""")
-        val json = JSON.parseFull(res)
+//        val tsExp = """(:)([^"{\[][\d.]*)""".r
+//        val res = tsExp replaceFirstIn(result, """$1"$2"""")
+
+        JSON.globalNumberParser = {input: String => input.toDouble}
+
+        val json = JSON.parseFull(result)
+
+
         event = Some(new Event(json.get.asInstanceOf[Map[String, Serializable]], Some(e._2)))
         val columns = event.get.keyMap.get("columns").get.asInstanceOf[List[Map[String, String]]]
         val columnMap = columns.map(c => c.get("column").get -> c.get("value").getOrElse("")).toMap
@@ -96,7 +102,7 @@ class DetectorParser(properties: Map[String, Serializable]) extends Parser(prope
     })
 
     val parsedEvent = event.getOrElse(data)
-    if (!parsedEvent.keyMap.get("alarm_code").getOrElse("1").equals("0"))
+    if (!parsedEvent.keyMap.get("alarm_code").getOrElse(1).equals(0.0))
       new Event(Map(), None)
     else
       parsedEvent

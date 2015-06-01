@@ -8,9 +8,9 @@
       "name": "in-kafka",
       "elementType": "KafkaInput",
       "configuration": {
-        "topics": "streaming_data",
-        "kafkaParams.zookeeper.connect": "localhost:2181",
-        "kafkaParams.group.id": "kafka-pruebas-2",
+        "topics": "detectorStream3",
+        "kafkaParams.zookeeper.connect": "poc2.stratio.com:2181,poc3.stratio.com:2181,poc4.stratio.com:2181",
+        "kafkaParams.group.id": "kafka-pruebas-8",
         "storageLevel": "MEMORY_AND_DISK_SER_2"
       }
     }
@@ -133,7 +133,7 @@
       "elementType": "MongoDbOutput",
       "configuration": {
         "clientUri": "mongodb://localhost:27017",
-        "dbName": "sparkta",
+        "dbName": "sparkta2",
         "multiplexer": "false",
         "granularity": "minute"
       }
