@@ -147,15 +147,27 @@ trait MongoDbDAO extends Closeable {
   protected def getUpdate(mapOperations: Map[Seq[(String, Any)], String],
                           objects: Seq[Imports.DBObject],
                           identitiesField: Seq[Imports.DBObject]): Imports.DBObject = {
-    val combinedOptions: Map[Seq[(String, Any)], casbah.Imports.JSFunction] = mapOperations ++
+
+    val a: Map[Seq[(String, Any)], String] = objects.map(bdo => {
+      val key: String = bdo.keySet().iterator().next()
+      val value = bdo.get(key)
+      (Seq(key -> value), "$set")
+    }).toMap
+
+    val combinedOptions: Map[Seq[(String, Any)], casbah.Imports.JSFunction] = mapOperations ++ a ++
       Map((Seq((LANGUAGE_FIELD_NAME, language)), "$set")) ++ {
       if (identitiesField.size > 0) {
         Map((Seq(Bucketer.identityField.id -> identitiesField), "$set"))
       } else Map()
-    }  ++ Map((Seq(("fields", objects)), "$set"))
-    combinedOptions.groupBy(_._2)
+    }
+
+    val dbobjects = combinedOptions.groupBy(_._2)
       .map { case (name, value) => MongoDBObject(name -> MongoDBObject(value.flatMap(f => f._1).toSeq: _*)) }
       .reduce(_ ++ _)
+
+
+
+    dbobjects
   }
 
   protected def getSentence(op: WriteOp, seq: Seq[(String, Option[Any])]): (Seq[(String, Any)], String) = {

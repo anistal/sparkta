@@ -53,6 +53,7 @@
         <module>input-socket</module>
         <module>input-twitter</module>
         <module>parser-datetime</module>
+        <module>parser-detector</module>
         <module>parser-morphlines</module>
         <module>bucketer-tag</module>
         <module>bucketer-hierarchy</module>
