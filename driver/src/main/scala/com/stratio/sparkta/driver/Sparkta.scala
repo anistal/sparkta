@@ -16,62 +16,20 @@
 
 package com.stratio.sparkta.driver
 
-import java.io.File
-import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.slf4j.SLF4JLogging
-import akka.io.IO
-import com.stratio.sparkta.driver.actor._
-import com.stratio.sparkta.driver.factory.CuratorFactoryHolder
-import com.stratio.sparkta.driver.factory.JarListFactory._
-import com.stratio.sparkta.driver.service.StreamingContextService
-import com.typesafe.config.ConfigFactory
-import spray.can.Http
+import com.stratio.sparkta.driver.constants.AppConstant
+import com.stratio.sparkta.driver.helpers.sparkta.SparktaHelper
 
 /**
  * Entry point of the application.
  */
 object Sparkta extends App with SLF4JLogging {
 
-  var sparktaHome: Option[String] = Option(System.getenv("SPARKTA_HOME")).orElse({
-    sparktaHome = Option(System.getProperty("user.dir", "./"))
-    log.warn("SPARKTA_HOME environment variable is not set, defaulting to {}", sparktaHome)
-    sparktaHome
-  })
+  val sparktaHome   = SparktaHelper.initSparktaHome()
+  val jars          = SparktaHelper.initJars(AppConstant.JarPaths, sparktaHome)
+  val configSparkta = SparktaHelper.initConfig(AppConstant.ConfigAppName)
+  val configApi     = SparktaHelper.initConfig(AppConstant.ConfigApi, Some(configSparkta))
 
-  val jarsPath = new File(sparktaHome.get, "plugins")
-  log.info("Loading jars from " + jarsPath.getAbsolutePath)
+  SparktaHelper.initAkkaSystem(configSparkta, configApi, jars, AppConstant.ConfigAppName)
 
-  val jdkPath = new File(sparktaHome.get, "sdk")
-  val aggregatorPath = new File(sparktaHome.get, "aggregator")
-
-  val jars = findJarsByPath(jarsPath) ++ findJarsByPath(jdkPath) ++ findJarsByPath(aggregatorPath)
-
-  log.info("Loading configuration...")
-  val sparktaConfig = ConfigFactory.load().getConfig("sparkta")
-
-  log.info("> Loading ZK client")
-
-  log.info("Starting Actor System...")
-  implicit val system = ActorSystem("sparkta")
-
-  val streamingContextService = new StreamingContextService(sparktaConfig, jars)
-  val curatorFramework = CuratorFactoryHolder.getInstance(sparktaConfig).get
-
-  log.info("Starting streaming supervisor")
-  val streamingSupervisor: ActorRef =
-    system.actorOf(Props(new StreamingSupervisorActor(streamingContextService)), "supervisor")
-
-  log.info("Starting fragment supervisor")
-  val fragmentSupervisor: ActorRef =
-    system.actorOf(Props(new FragmentSupervisorActor(curatorFramework)), "fragmentActor")
-
-  log.info("Starting REST api...")
-  val controller = system.actorOf(Props(new PolicyControllerActor(streamingSupervisor, fragmentSupervisor)),
-    "workflowController")
-
-  val apiConfig = sparktaConfig.getConfig("api")
-
-  IO(Http) ! Http.Bind(controller, interface = apiConfig.getString("host"), port = apiConfig.getInt("port"))
-
-  log.info("System UP!")
 }
