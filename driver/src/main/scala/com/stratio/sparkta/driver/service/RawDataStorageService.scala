@@ -56,10 +56,7 @@ class RawDataStorageService(sc: SQLContext, path: String, partitionFormat: Strin
     raw.map(event => {
       RawEvent(System.currentTimeMillis().toString, extractRawFromEvent(event))
     }).foreachRDD(_.toDF()
-      .write
-      .format("parquet")
-      .mode(SaveMode.Append)
-      .save(s"$path$timeSuffix"))
+      .save(s"$path$timeSuffix", "parquet", SaveMode.Append))
     raw
   }
 }

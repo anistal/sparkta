@@ -16,13 +16,15 @@
 
 package com.stratio.sparkta.testat
 
-import scala.io.Source
-import scala.reflect.io.File
 
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SQLContext
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+
+import scala.io.Source
+import scala.reflect.io.File
+
 
 @RunWith(classOf[JUnitRunner])
 class ISocketORawDataIT extends SparktaATSuite {
@@ -34,6 +36,7 @@ class ISocketORawDataIT extends SparktaATSuite {
   val parquetPath = policyDto.rawData.path
 
   "Sparkta" should {
+
     "save raw data in the storage" in {
       sparktaRunner
       checkData
@@ -42,7 +45,7 @@ class ISocketORawDataIT extends SparktaATSuite {
     def checkData(): Unit = {
       val sc = new SparkContext(s"local[$NumExecutors]", "ISocketORawDataAT")
       val sqc = new SQLContext(sc)
-      val result = sqc.read.parquet(parquetPath)
+      val result = sqc.parquetFile(parquetPath)
       result.registerTempTable("rawLines")
 
       sqc.sql("select data from rawLines")
@@ -51,6 +54,7 @@ class ISocketORawDataIT extends SparktaATSuite {
         .toSeq
         .sortBy(_.toString) should be(CsvLines)
       sc.stop
+
     }
   }
 

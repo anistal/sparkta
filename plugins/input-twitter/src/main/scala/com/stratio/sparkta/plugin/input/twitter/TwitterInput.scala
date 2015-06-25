@@ -16,23 +16,22 @@
 package com.stratio.sparkta.plugin.input.twitter
 
 import java.io.{Serializable => JSerializable}
-import com.stratio.sparkta.sdk.Input._
 import com.stratio.sparkta.sdk.ValidatingPropertyMap._
 import com.stratio.sparkta.sdk.{Event, Input}
 
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.twitter.TwitterUtils
-import twitter4j.{GeoLocation, TwitterFactory}
+import twitter4j.TwitterFactory
 import twitter4j.conf.ConfigurationBuilder
 
 import scala.util.Try
 
 /**
- * Connects to Twitter's stream and generates stream events.
- * @author ajnavarro
+ * Created by ajnavarro on 22/10/14.
  */
 class TwitterInput(properties: Map[String, JSerializable]) extends Input(properties) {
+
 
   System.setProperty("twitter4j.oauth.consumerKey",properties.getString("consumerKey"))
   System.setProperty("twitter4j.oauth.consumerSecret", properties.getString("consumerSecret"))
@@ -45,20 +44,24 @@ class TwitterInput(properties: Map[String, JSerializable]) extends Input(propert
   val trends = twitterApi.getPlaceTrends(1).getTrends.map(trend => trend.getName)
   val terms :Try[Seq[String]] = Try(properties.getString("termsOfSearch").split(","))
 
+
   val search = terms.getOrElse(trends.toSeq)
 
+
   override def setUp(ssc: StreamingContext): DStream[Event] = {
-    TwitterUtils.createStream(ssc, None, search ).map(data => new Event(Map(
-      RawDataKey -> data,
-      "status" -> data.asInstanceOf[java.io.Serializable],
+
+
+    val stream = TwitterUtils.createStream(ssc, None, search )
+
+    stream.map(data => new Event(Map("status" -> data.asInstanceOf[java.io.Serializable],
       "wordsN" -> data.getText.split(" ").size,
       "retweets" -> data.getRetweetCount,
       "userLocation" -> data.getUser.getLocation.toLowerCase,
       "timestamp" ->  data.getCreatedAt,
       "text"-> data.getText,
-      "geolocation" -> (Option(data.getGeoLocation) match {
-        case Some(geo) => Some((geo.getLatitude + "__" + geo.getLongitude))
-        case _ => None
+      "geolocation" -> (data.getGeoLocation match {
+        case null => None
+        case _ => Some((data.getGeoLocation.getLatitude + "__" + data.getGeoLocation.getLongitude))
       }).asInstanceOf[JSerializable]
     ),Some(data)))
   }

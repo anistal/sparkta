@@ -33,12 +33,14 @@ import org.scalatest.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class RawDataStorageIT extends TestSuiteBase {
 
-  val ExpectedResult: Long = 6
+  val ExpectedResult: Long = 9
   val path = "testPath"
   val PreserverOrder: Boolean = true
   val SleepTime: Long = 2000
 
   test("Write and read events in/from parquet") {
+
+    configureContext
     val rds = new RawDataStorageService(sparktaTestSQLContext, path, "day")
     //This is not a test, This is a way to feed parquet
     intercept[SparkException] {
@@ -55,7 +57,7 @@ class RawDataStorageIT extends TestSuiteBase {
     Thread.sleep(SleepTime)
 
     try {
-      val pqFile = sparktaTestSQLContext.read.parquet(path + rds.timeSuffix)
+      val pqFile = sparktaTestSQLContext.parquetFile(path + rds.timeSuffix)
       assert(pqFile.count() == ExpectedResult)
     } finally {
       //We can't use the before method
@@ -68,7 +70,7 @@ class RawDataStorageIT extends TestSuiteBase {
     conf.set("spark.driver.allowMultipleContexts", "true")
     conf.setMaster("local[2]")
     conf.setAppName("1" + randomSuffix)
-    conf.set("spark.ui.port", "333" + randomSuffix)
+    conf.set("spark.ui.port", "666" + randomSuffix)
   }
 
   private def randomSuffix: String = {

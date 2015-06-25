@@ -86,5 +86,4 @@ class DateOperationsSpec extends FlatSpec with ShouldMatchers {
     val now = Option(formatter.parseDateTime("1984-03-17 13:13:13"))
     DateOperations.generateParquetPath(now) should be(expectedRawPath)
   }
-
 }

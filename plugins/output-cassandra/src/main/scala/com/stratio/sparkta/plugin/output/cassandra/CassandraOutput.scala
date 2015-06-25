@@ -122,10 +122,7 @@ class CassandraOutput(keyName: String,
   }
 
   override def upsert(dataFrame: DataFrame, tableName: String): Unit = {
-    dataFrame.write
-      .format("org.apache.spark.sql.cassandra")
-      .mode(Overwrite)
-      .options(Map("table" -> tableName, "keyspace" -> keyspace)).save()
+    dataFrame.save("org.apache.spark.sql.cassandra", Append, Map("c_table" -> tableName, "keyspace" -> keyspace))
   }
 }
 
@@ -139,9 +136,11 @@ object CassandraOutput {
     val connectionHost = configuration.getString("connectionHost", DefaultHost)
     val connectionPort = configuration.getString("connectionPort", DefaultPort)
 
-    Seq(
-      ("spark.cassandra.connection.host", connectionHost),
-      ("spark.cassandra.connection.port", connectionPort)
+    // TODO (anistal) if the project is updated to spark 1.4, we must to change:
+    // spark.cassandra.connection.native.port to "spark.cassandra.connection.port
+
+    Seq(("spark.cassandra.connection.host", connectionHost),
+      ("spark.cassandra.connection.native.port", connectionPort)
     )
   }
 }

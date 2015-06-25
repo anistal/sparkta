@@ -45,7 +45,8 @@ class ISocketOParquetIT extends SparktaATSuite {
     "save data in parquet" in new MockData {
       sparktaRunner
       val sqc = new SQLContext(new SparkContext(s"local[$NumExecutors]", "ISocketOParquetAT"))
-      sqc.read.parquet(parquetPath).registerTempTable("products")
+
+      sqc.parquetFile(parquetPath).registerTempTable("products")
       sqc.sql("select product, avg_price, sum_price from products")
         .collect()
         .map(_.toSeq.toSet)
