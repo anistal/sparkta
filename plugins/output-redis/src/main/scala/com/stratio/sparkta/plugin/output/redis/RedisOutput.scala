@@ -63,9 +63,9 @@ class RedisOutput(keyName: String,
       AggregateOperations.keyString(upMetricOp._1, timeName, fixedDimensions))
       .filter(_._1.size > 0).foreach(collMetricOp => {
       collMetricOp._2.foreach(metricOp => {
-        val hashKey = collMetricOp._1 + IdSeparator + metricOp._1.dimensionValues
+        val hashKey = s"${collMetricOp._1}$IdSeparator" + metricOp._1.dimensionValues
           .map(dimVal => List(dimVal.getNameDimension, dimVal.value.toString))
-          .flatMap(_.toSeq).mkString(IdSeparator) + IdSeparator + timeName + IdSeparator + metricOp._1.time
+          .flatMap(_.toSeq).mkString(IdSeparator) + s"$IdSeparator$timeName$IdSeparator${metricOp._1.time}"
 
         metricOp._2.foreach(aggregation => {
           val currentOperation = operationTypes.get.value.get(aggregation._1).get._1
