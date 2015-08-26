@@ -54,6 +54,7 @@ with Matchers {
       val apd = new AggregationPoliciesModel(
         None,
         "policy-name",
+        None,
         sparkStreamingWindow,
         checkpointDir,
         rawDataDto,
@@ -71,6 +72,7 @@ with Matchers {
       val apdBad = new AggregationPoliciesModel(
         None,
         "policy-name",
+        None,
         sparkStreamingWindowBad,
         checkpointDir,
         rawDataDto,

@@ -91,8 +91,8 @@ with Matchers {
     }
     "Create policy" in {
       val PolicyName = "p-1"
-      val apd = new AggregationPoliciesModel(None, PolicyName, sparkStreamingWindow, checkpointDir, new RawDataModel(),
-        Seq(), Seq(), Some(input), Seq(), Seq())
+      val apd = new AggregationPoliciesModel(None, PolicyName, None, sparkStreamingWindow, checkpointDir,
+        new RawDataModel(), Seq(), Seq(), Some(input), Seq(), Seq())
       try {
         val test = Post("/policy", apd) ~> routes
         supervisorProbe.expectMsg(new CreateContext(apd))
@@ -127,8 +127,8 @@ with Matchers {
       val checkpointConfig =
         new CheckpointModel(checkpointGranularity, checkpointGranularity, checkpointInterval, checkpointAvailable)
       val cubeDto = new CubeModel(cubeName, checkpointConfig, Seq(dimensionDto), Seq(), CubeModel.Multiplexer)
-      val apd = new AggregationPoliciesModel(None, PolicyName, sparkStreamingWindow, checkpointDir, new RawDataModel(),
-        Seq(), Seq(cubeDto), Some(input), Seq(), Seq())
+      val apd = new AggregationPoliciesModel(None, PolicyName, None, sparkStreamingWindow, checkpointDir,
+        new RawDataModel(), Seq(), Seq(cubeDto), Some(input), Seq(), Seq())
       val test = Post("/policy", apd) ~> routes
       test ~> check {
         rejections.size should be(1)

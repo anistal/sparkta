@@ -29,6 +29,7 @@ import com.stratio.sparkta.sdk.JsoneyStringSerializer
 
 case class AggregationPoliciesModel(id: Option[String] = None,
                                     name: String = "default",
+                                    description: Option[String] = None,
                                     sparkStreamingWindow: Long = AggregationPoliciesModel.sparkStreamingWindow,
                                     checkpointPath: String,
                                     rawData: RawDataModel,
