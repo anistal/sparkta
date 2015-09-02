@@ -43,9 +43,12 @@ class JsoneyStringSerializer extends CustomSerializer[JsoneyString](format => (
   },
   {
     case x: JsoneyString =>
+      // TODO: (anistal) This is a fucking unicorn shit a must be refactored ASAP.
       if(x.string.contains("[") && x.string.contains("{")) {
         parse(x.string)
-      } else {
+      } else if(x.string.equals("true") || x.string.equals("false")) {
+        new JBool(x.string.toBoolean)
+      } else  {
         new JString(x.string)
       }
       new JString(x.string)
