@@ -33,6 +33,7 @@ import com.stratio.sparkta.serving.core.policy.status.{PolicyStatusActor, Policy
 import com.stratio.sparkta.serving.core.{AppConstant, CuratorFactoryHolder, SparktaConfig}
 import com.typesafe.config.ConfigFactory
 import org.apache.commons.io.FileUtils
+import org.apache.commons.lang.StringEscapeUtils
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
@@ -44,11 +45,20 @@ object SparktaClusterJob extends SparktaSerializer {
   def main(args: Array[String]): Unit = {
     if (checkArgs(args)) {
       Try {
-        initSparktaConfig(args(4), args(3))
+        log.info(StringEscapeUtils.unescapeJavaScript(args(4)))
+        log.info(StringEscapeUtils.unescapeJavaScript(args(3)))
+        log.info("<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>")
+        initSparktaConfig(StringEscapeUtils.unescapeJavaScript(args(4)),
+          StringEscapeUtils.unescapeJavaScript(args(3)))
         val policy = getPolicyFromZookeeper(args(0))
         val hadoopUserName = scala.util.Properties.envOrElse("HADOOP_USER_NAME", AppConstant.DefaultHadoopUserName)
         val hadoopConfDir = scala.util.Properties.envOrNone("HADOOP_CONF_DIR")
+
+        log.info(s">>>>>>>>>>>>>>>>>>>>>>>>>>> Hadoop username: $hadoopUserName")
+        log.info(s">>>>>>>>>>>>>>>>>>>>>>>>>>> Hadoop confdir: $hadoopConfDir")
+
         val hdfsUtils = new HdfsUtils(hadoopUserName, hadoopConfDir)
+
         val pluginFiles = addHdfsFiles(hdfsUtils, args(1))
         val classPathFiles = addHdfsFiles(hdfsUtils, args(2))
         implicit val system = ActorSystem(s"${policy.id.get}")
@@ -85,8 +95,16 @@ object SparktaClusterJob extends SparktaSerializer {
   }
 
   def initSparktaConfig(detailConfig: String, zKConfig: String): Unit = {
-    val configStr = s"$detailConfig,$zKConfig".stripPrefix(",").stripSuffix(",")
-    SparktaConfig.initMainConfig(Some(ConfigFactory.parseString(s"{$configStr}").atKey("sparkta")))
+    val configStr = s"${detailConfig.stripPrefix("{").stripSuffix("}")}\n${zKConfig.stripPrefix("{").stripSuffix("}")}"
+
+    log.info("GGGGGGGGGGGGGGGGGGGGGGERRRRRRRRRRRRRRRRRRRRRRMMMMMANNNN")
+    log.info(s"sparkta {$configStr}")
+    log.info("GGGGGGGGGGGGGGGGGGGGGGERRRRRRRRRRRRRRRRRRRRRRMMMMMANNNN")
+
+    val config = SparktaConfig.initMainConfig(Option(ConfigFactory.parseString(s"sparkta{$configStr}")))
+
+    log.info(config.get.toString)
+
   }
 
   def addHdfsFiles(hdfsUtils: HdfsUtils, hdfsPath: String): Array[URI] = {

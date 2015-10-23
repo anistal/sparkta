@@ -126,7 +126,7 @@ class ClusterSparkStreamingContextActor(policy: AggregationPoliciesModel,
                                    hdfsDriverFile: String,
                                    pluginsJarsPath: String,
                                    classpathJarsPath: String): Unit = {
-    val execMode = getExecutionMode.toLowerCase
+    val execMode = getExecutionMode
     if (execMode == AppConstant.ConfigMesos) {
       sparkSubmitSentence(main, hdfsDriverFile, pluginsJarsPath, classpathJarsPath, execMode, getMesosCommandString)
     }
@@ -147,6 +147,9 @@ class ClusterSparkStreamingContextActor(policy: AggregationPoliciesModel,
                                   execModeSentence: String): Unit = {
     val cmd = s"$main $getGenericCommand $execModeSentence $getSparkConfig $hdfsDriverFile " +
       s"${policy.id.get} $pluginsJarsPath $classpathJarsPath $getZookeeperCommand $getDetailConfigCommand"
+
+    log.info(s">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> $cmd")
+
     cmd.!!
     log.info(s"Spark submit to $execMode cluster executed")
   }
@@ -224,13 +227,13 @@ class ClusterSparkStreamingContextActor(policy: AggregationPoliciesModel,
 
   private def getZookeeperCommand: String = {
     val config = zookeeperConfig.atKey("zk").root.render(ConfigRenderOptions.concise)
-    "\"" + StringEscapeUtils.escapeJavaScript(config.stripPrefix("{").stripSuffix("}")) + "\""
+    StringEscapeUtils.escapeJavaScript(config)
   }
 
   private def getDetailConfigCommand: String = {
     if (detailConfig.isDefined) {
       val config = detailConfig.get.atKey("config").root.render(ConfigRenderOptions.concise)
-      "\"" + StringEscapeUtils.escapeJavaScript(config.stripPrefix("{").stripSuffix("}")) + "\""
+      StringEscapeUtils.escapeJavaScript(config)
     } else ""
   }
 

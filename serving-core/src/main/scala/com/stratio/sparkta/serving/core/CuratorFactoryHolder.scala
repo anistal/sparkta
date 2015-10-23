@@ -39,6 +39,11 @@ object CuratorFactoryHolder extends SLF4JLogging {
   def getInstance(config: Option[Config] = SparktaConfig.getZookeeperConfig): CuratorFramework = {
     curatorFramework match {
       case None => {
+
+        log.info("#################################################################################################")
+
+        //println(SparktaConfig.getZookeeperConfig)
+
         var defaultConnectionString = AppConstant.DefaultZookeeperConnection
         var connectionTimeout = AppConstant.DefaultZookeeperConnectionTimeout
         var sessionTimeout = AppConstant.DefaultZookeeperSessionTimeout

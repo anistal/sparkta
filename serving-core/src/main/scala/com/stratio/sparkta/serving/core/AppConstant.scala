@@ -83,7 +83,7 @@ object AppConstant {
   final val DefaultZookeeperRetryInterval = 10000
 
   //HDFS
-  final val DefaultHadoopUserName = "stratio"
+  final val DefaultHadoopUserName = "ubuntu"
 
   final val pluginExtension = "-plugin.jar"
   final val jarsFilesMap = Map(
@@ -125,6 +125,7 @@ object AppConstant {
   "Redis" -> s"output-redis$pluginExtension",
   "Detector" -> s"parser-detector$pluginExtension",
   "Morphlines" -> s"parser-morphlines$pluginExtension",
+  "DateTime" -> s"parser-datetime$pluginExtension",
   "Split" -> s"parser-split$pluginExtension",
   "Type" -> s"parser-type$pluginExtension"
   )
