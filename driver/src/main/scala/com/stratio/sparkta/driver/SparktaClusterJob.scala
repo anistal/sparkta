@@ -25,10 +25,11 @@ import akka.util.Timeout
 import com.stratio.sparkta.driver.SparktaJob._
 import com.stratio.sparkta.driver.service.StreamingContextService
 import com.stratio.sparkta.driver.util.{HdfsUtils, PolicyUtils}
+import com.stratio.sparkta.sdk.JsoneyStringSerializer
 import com.stratio.sparkta.serving.core.actor.FragmentActor
 import com.stratio.sparkta.serving.core.constants.{AkkaConstant, AppConstant}
 import com.stratio.sparkta.serving.core.helpers.{JarsHelper, PolicyHelper}
-import com.stratio.sparkta.serving.core.models.{AggregationPoliciesModel, PolicyStatusModel, SparktaSerializer}
+import com.stratio.sparkta.serving.core.models.{AggregationPoliciesModel, PolicyStatusModel, StreamingContextStatusEnum}
 import com.stratio.sparkta.serving.core.policy.status.PolicyStatusActor.Update
 import com.stratio.sparkta.serving.core.policy.status.{PolicyStatusActor, PolicyStatusEnum}
 import com.stratio.sparkta.serving.core.{CuratorFactoryHolder, SparktaConfig}
@@ -36,11 +37,13 @@ import com.typesafe.config.ConfigFactory
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang.StringEscapeUtils
 import org.apache.curator.framework.CuratorFramework
+import org.json4s.ext.EnumNameSerializer
+import org.json4s.{DefaultFormats, Formats}
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-object SparktaClusterJob extends SparktaSerializer {
+object SparktaClusterJob {
 
   implicit val timeout: Timeout = Timeout(3.seconds)
   final val PolicyIdIndex = 0
@@ -63,6 +66,13 @@ object SparktaClusterJob extends SparktaSerializer {
       val policy = PolicyHelper.parseFragments(
         PolicyHelper.fillFragments(policyZk, fragmentActor, timeout))
       val pluginsClasspathFiles = addPluginsAndClasspath(args(PluginsPathIndex), args(ClassPathIndex))
+
+      implicit val json4sJacksonFormats: Formats =
+        DefaultFormats +
+          new EnumNameSerializer(StreamingContextStatusEnum) +
+          new JsoneyStringSerializer() +
+          new EnumNameSerializer(PolicyStatusEnum)
+
       val policyStatusActor = system.actorOf(Props(new PolicyStatusActor(curatorFramework)),
         AkkaConstant.PolicyStatusActor)
 
