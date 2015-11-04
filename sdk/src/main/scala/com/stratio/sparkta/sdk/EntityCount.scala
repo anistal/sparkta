@@ -18,7 +18,6 @@ package com.stratio.sparkta.sdk
 
 import java.io.{Serializable => JSerializable}
 
-import com.stratio.sparkta.sdk.TypeOp.TypeOp
 import com.stratio.sparkta.sdk.ValidatingPropertyMap._
 
 abstract class EntityCount(name: String, properties: Map[String, JSerializable]) extends Operator(name, properties) {

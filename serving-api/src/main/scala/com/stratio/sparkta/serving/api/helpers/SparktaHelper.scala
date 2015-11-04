@@ -48,7 +48,6 @@ with SparktaSerializer {
    * Initializes Sparkta's akka system running an embedded http server with the REST API.
    * @param appName with the name of the application.
    */
-
   def initAkkaSystem(appName: String): Unit = {
     if (SparktaConfig.mainConfig.isDefined &&
       SparktaConfig.apiConfig.isDefined &&
@@ -73,8 +72,7 @@ with SparktaSerializer {
         AkkaConstant.PolicyActor ->
           system.actorOf(Props(new PolicyActor(curatorFramework, policyStatusActor)), AkkaConstant.PolicyActor),
         AkkaConstant.SparkStreamingContextActor -> system.actorOf(RoundRobinPool(streamingActorInstances).props(Props(
-          new SparkStreamingContextActor(
-            streamingContextService, policyStatusActor, curatorFramework))),
+          new SparkStreamingContextActor(streamingContextService, policyStatusActor, curatorFramework))),
           AkkaConstant.SparkStreamingContextActor)
       )
       val swaggerActor = system.actorOf(
