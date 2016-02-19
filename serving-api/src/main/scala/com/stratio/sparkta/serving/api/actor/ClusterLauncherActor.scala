@@ -45,6 +45,9 @@ import com.stratio.sparkta.serving.core.models.PolicyStatusModel
 import com.stratio.sparkta.serving.core.models.SparktaSerializer
 import com.stratio.sparkta.serving.core.policy.status.PolicyStatusActor.Update
 import com.stratio.sparkta.serving.core.policy.status.PolicyStatusEnum
+import scala.concurrent.{ExecutionContext, Future}
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class ClusterLauncherActor(policy: AggregationPoliciesModel, policyStatusActor: ActorRef) extends Actor
   with SLF4JLogging
@@ -78,8 +81,8 @@ class ClusterLauncherActor(policy: AggregationPoliciesModel, policyStatusActor: 
       log.info("Init new cluster streamingContext with name " + policy.name)
       validateSparkHome
       saveHdfsConfig
-      Uploader.uploadPlugins(PluginsJarsPath)
-      Uploader.uploadClasspath(ClasspathJarsPath)
+      val pluginsFiles = Uploader.uploadPlugins(PluginsJarsPath)
+      val classpathFiles = Uploader.uploadClasspath(ClasspathJarsPath)
       val hdfsDriverPath = Uploader.uploadDriver(DriverJarPath)
       val driverParams = Seq(
         PolicyId,
@@ -87,7 +90,7 @@ class ClusterLauncherActor(policy: AggregationPoliciesModel, policyStatusActor: 
         ClasspathJarsPath,
         zkConfigEncoded,
         detailConfigEncoded)
-      launch(SparktaDriver, hdfsDriverPath, Master, sparkArgs, driverParams)
+      launch(SparktaDriver, hdfsDriverPath, Master, sparkArgs, driverParams, classpathFiles ++ pluginsFiles)
     } match {
       case Failure(exception) => {
         log.error(exception.getLocalizedMessage, exception)
@@ -126,28 +129,55 @@ class ClusterLauncherActor(policy: AggregationPoliciesModel, policyStatusActor: 
       Try(ClusterConfig.getBoolean(AppConstant.StandAloneSupervise)).getOrElse(false)
     } else false
 
-  private def launch(main: String, hdfsDriverFile: String, master: String, args: Map[String, String],
-                     driverParams: Seq[String]): Unit = {
-    val sparkLauncher = new SparkLauncher()
-      .setSparkHome(sparkHome)
-      .setAppResource(hdfsDriverFile)
-      .setMainClass(main)
-      .setMaster(master)
-    args.map({ case (k: String, v: String) => sparkLauncher.addSparkArg(k, v) })
-    if (isStandaloneSupervise) sparkLauncher.addSparkArg(StandaloneSupervise)
-    //Spark params (everything starting with spark.)
-    sparkConf.map({ case (key: String, value: String) => sparkLauncher.setConf(key, value) })
-    // Driver (Sparkta) params
-    driverParams.map(sparkLauncher.addAppArgs(_))
-    val spark = sparkLauncher.launch()
-    spark.waitFor()
-    val exit = spark.exitValue()
-    log.debug(s"Spark exit status: $exit")
-    // TODO: This should be done in another thread. At this point, you only see the error when job is terminated
-    val in = Source.fromInputStream(spark.getErrorStream)
-    in.getLines().foreach(log.error)
-    in.close()
-    if (exit != 0) setErrorStatus
+  private def launch(main: String, hdfsDriverFile: String,
+                     master: String,
+                     args: Map[String, String],
+                     driverParams: Seq[String],
+                     classpathFiles: Seq[String])(implicit executionContext: ExecutionContext): Unit = {
+        val sparkLauncher = new SparkLauncher()
+          .setSparkHome(sparkHome)
+          .setAppResource(hdfsDriverFile)
+          .setMainClass(main)
+          .setMaster(master)
+        //classpathFiles.foreach(file => sparkLauncher.addJar(Uploader.getHdfsPrefix(file)))
+        classpathFiles.foreach(file => sparkLauncher.addJar(file))
+        args.map({ case (k: String, v: String) => sparkLauncher.addSparkArg(k, v) })
+        if (isStandaloneSupervise) sparkLauncher.addSparkArg(StandaloneSupervise)
+        //Spark params (everything starting with spark.)
+        sparkConf.map({ case (key: String, value: String) => sparkLauncher.setConf(key, value) })
+        // Driver (Sparkta) params
+        driverParams.map(sparkLauncher.addAppArgs(_))
+
+    Future[(Int, Process)] {
+      val sparkProcess = sparkLauncher.launch()
+      sparkProcess.getErrorStream.close()
+      (sparkProcess.waitFor(), sparkProcess)
+    } onComplete {
+      case Success((0, _)) =>
+        log.info("Spark process exited successfully")
+      case Success((exitCode, sparkProcess)) =>
+        log.error(s"Spark process exited with code $exitCode")
+        val errorLines = for {
+          is <- Try(sparkProcess.getErrorStream)
+          source = Source.fromInputStream(is)
+        } yield source.getLines()
+        errorLines.foreach { lines =>
+          lines.foreach(line => log.error(line))
+        }
+      case Failure(exception) =>
+        log.error(exception.getMessage)
+        throw exception
+    }
+
+
+//    spark.waitFor()
+//    val exit = spark.exitValue()
+//    log.debug(s"Spark exit status: $exit")
+//    // TODO: This should be done in another thread. At this point, you only see the error when job is terminated
+//    val in = Source.fromInputStream(spark.getErrorStream)
+//    in.getLines().foreach(log.error)
+//    in.close()
+//    if (exit != 0) setErrorStatus
   }
 
   private def sparkArgs: Map[String, String] =

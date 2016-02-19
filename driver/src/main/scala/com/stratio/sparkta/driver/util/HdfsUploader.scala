@@ -33,26 +33,33 @@ case class HdfsUploader(policy: AggregationPoliciesModel, hdfs: HdfsUtils) exten
     Some(AppConstant.pluginExtension), None, None, None, false)
   private val activeJars = PolicyUtils.activeJars(policy, jarsPlugins)
 
-  def uploadPlugins(pluginsJarsPath: String): Unit = {
+  def uploadPlugins(pluginsJarsPath: String): Seq[String] = {
     validate
     val pluginsJarsFiles = PolicyUtils.activeJarFiles(activeJars.right.get, jarsPlugins)
-    pluginsJarsFiles.foreach(file => hdfs.write(file.getAbsolutePath, pluginsJarsPath, true))
+    //pluginsJarsFiles.foreach(file => hdfs.write(file.getAbsolutePath, pluginsJarsPath, true))
     log.info("Jars plugins uploaded to HDFS")
+    pluginsJarsFiles.map(file => file.getAbsolutePath)
   }
 
-  def uploadClasspath(classpathJarsPath: String): Unit = {
-    JarsHelper.findJarsByPath(new File(SparktaConfig.sparktaHome, AppConstant.ClasspathJarFolder),
+  def uploadClasspath(classpathJarsPath: String): Seq[String] = {
+    val files = JarsHelper.findJarsByPath(new File(SparktaConfig.sparktaHome, AppConstant.ClasspathJarFolder),
       Some(".jar"), None, Some("driver"), Some(Seq("plugins", "spark", "driver", "web", "serving-api")), false)
-      .foreach(file => hdfs.write(file.getAbsolutePath, classpathJarsPath, true))
+      //files.foreach(file => hdfs.write(file.getAbsolutePath, classpathJarsPath, true))
     log.info("Classpath uploaded to HDFS")
+    files.map(file => file.getAbsolutePath)
   }
 
   def uploadDriver(driverJarPath: String): String = {
     val driveFolder = new File(SparktaConfig.sparktaHome, AppConstant.ClusterExecutionJarFolder)
     val driverJar = JarsHelper.findDriverByPath(driveFolder).head
-    hdfs.write(driverJar.getAbsolutePath, driverJarPath, true)
-    log.info("Jar driver uploaded to HDFS")
-    s"hdfs://${hdfsConfig.getString(AppConstant.HdfsMaster)}$driverJarPath${driverJar.getName}"
+//    hdfs.write(driverJar.getAbsolutePath, driverJarPath, true)
+//    log.info("Jar driver uploaded to HDFS")
+//    s"hdfs://${hdfsConfig.getString(AppConstant.HdfsMaster)}$driverJarPath${driverJar.getName}"
+    driverJar.getAbsolutePath
+  }
+
+  def getHdfsPrefix(path: String): String = {
+    s"hdfs://${hdfsConfig.getString(AppConstant.HdfsMaster)}$path"
   }
 
   def validate: Unit = {

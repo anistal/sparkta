@@ -75,6 +75,17 @@ case class StreamingContextService(policyStatusActor: Option[ActorRef] = None, g
     SparkContextFactory.setSparkStreamingContext(ssc)
 
     Option(ssc)
+
+    /*
+     val ssc = SparktaJob.run(getClusterSparkContext(apConfig, files, detailConfig), apConfig)
+    SparkContextFactory.sparkStreamingInstance
+
+    SparkContextFactory.setSparkContext(ssc.sparkContext)
+    SparkContextFactory.setSparkStreamingContext(ssc)
+
+    Option(ssc)
+     */
+
   }
 
   private def getStandAloneSparkContext(apConfig: AggregationPoliciesModel, jars: Seq[File]): SparkContext = {

@@ -72,12 +72,12 @@ object SparktaClusterJob extends SparktaSerializer {
       val policyZk = getPolicyFromZookeeper(policyId, curatorFramework)
       implicit val system = ActorSystem(policyId)
       val fragmentActor = system.actorOf(Props(new FragmentActor(curatorFramework)), AkkaConstant.FragmentActor)
-      val policy = PolicyHelper.parseFragments(
-        PolicyHelper.fillFragments(policyZk, fragmentActor, timeout))
-      val pluginsClasspathFiles = Try(addPluginsAndClasspath(args(PluginsPathIndex), args(ClassPathIndex))) match {
+      val pluginsClasspathFiles = Try(addPluginsAndClasspath(args(PluginsPathIndex), "")) match {
         case Success(files) => files
         case Failure(ex) => throw new RuntimeException("Someting goes wrong when trying to retrieve jars from HDFS", ex)
       }
+      val policy = PolicyHelper.parseFragments(
+        PolicyHelper.fillFragments(policyZk, fragmentActor, timeout))
 
       val policyStatusActor = system.actorOf(Props(new PolicyStatusActor(curatorFramework)),
         AkkaConstant.PolicyStatusActor)
@@ -120,10 +120,11 @@ object SparktaClusterJob extends SparktaSerializer {
     val hdfsJsonConfig = zkDAO.dao.get(AppConstant.HdfsId).get
     val config = ConfigFactory.parseString(hdfsJsonConfig).getConfig(AppConstant.HdfsId)
     val hdfsUtils = HdfsUtils(config)
-    val pluginFiles = addHdfsFiles(hdfsUtils, pluginsPath)
-    val classPathFiles = addHdfsFiles(hdfsUtils, classPath)
+    //val pluginFiles = addHdfsFiles(hdfsUtils, pluginsPath)
+    //val classPathFiles = addHdfsFiles(hdfsUtils, classPath)
 
-    pluginFiles ++ classPathFiles
+    //pluginFiles// ++ classPathFiles
+    Seq()
   }
 
   def addHdfsFiles(hdfsUtils: HdfsUtils, hdfsPath: String): Array[URI] = {
