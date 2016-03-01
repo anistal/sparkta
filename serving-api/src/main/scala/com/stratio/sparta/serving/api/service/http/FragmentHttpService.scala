@@ -13,31 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.stratio.sparta.serving.api.service.http
 
 import javax.ws.rs.Path
-import com.stratio.spray.oauth2.client.OauthClient
-import com.stratio.spray.oauth2.client.OauthClientHelper._
-
-import scala.concurrent.Await
-import scala.util.{Failure, Success}
 
 import akka.pattern.ask
+import com.stratio.sparta.serving.api.actor.PolicyActor.{Delete, FindByFragment, ResponsePolicies}
+import com.stratio.sparta.serving.api.constants.HttpConstant
+import com.stratio.sparta.serving.core.actor.FragmentActor._
+import com.stratio.sparta.serving.core.constants.AkkaConstant
+import com.stratio.sparta.serving.core.models.FragmentElementModel
+import com.stratio.spray.oauth2.client.OauthClientHelper._
 import com.wordnik.swagger.annotations._
 import spray.http.{HttpResponse, StatusCodes}
 import spray.routing.Route
 
-import com.stratio.sparta.serving.core.actor.FragmentActor._
-import com.stratio.sparta.serving.api.actor.PolicyActor.{Delete, FindByFragment, ResponsePolicies}
-import com.stratio.sparta.serving.api.constants.HttpConstant
-import com.stratio.sparta.serving.core.constants.AkkaConstant
-import com.stratio.sparta.serving.core.models.FragmentElementModel
+import scala.concurrent.Await
+import scala.util.{Failure, Success}
 
 @Api(value = HttpConstant.FragmentPath, description = "Operations over fragments: inputs and outputs that will be " +
   "included in a policy")
-trait FragmentHttpService extends BaseHttpService with OauthClient {
+trait FragmentHttpService extends BaseHttpService {
 
-  override def routes: Route = findByTypeAndId ~ findAllByType ~ create ~ update ~ deleteByTypeAndId ~ findByTypeAndName
+  override def routes: Route =
+    findByTypeAndId ~ findAllByType ~ create ~ update ~ deleteByTypeAndId ~ findByTypeAndName
 
   @ApiOperation(value = "Find a fragment depending of its type and id.",
     notes = "Find a fragment depending of its type and id.",
@@ -60,17 +60,13 @@ trait FragmentHttpService extends BaseHttpService with OauthClient {
       message = HttpConstant.NotFoundMessage)
   ))
   def findByTypeAndId: Route = {
-    secured { user =>
-      path(HttpConstant.FragmentPath / Segment / Segment) { (fragmentType, id) =>
-        authorize(hasRole(Seq("*"), user)) {
-          get {
-            complete {
-              val future = supervisor ? new FindByTypeAndId(fragmentType, id)
-              Await.result(future, timeout.duration) match {
-                case ResponseFragment(Failure(exception)) => throw exception
-                case ResponseFragment(Success(fragment)) => fragment
-              }
-            }
+    path(HttpConstant.FragmentPath / Segment / Segment) { (fragmentType, id) =>
+      get {
+        complete {
+          val future = supervisor ? new FindByTypeAndId(fragmentType, id)
+          Await.result(future, timeout.duration) match {
+            case ResponseFragment(Failure(exception)) => throw exception
+            case ResponseFragment(Success(fragment)) => fragment
           }
         }
       }
@@ -99,17 +95,13 @@ trait FragmentHttpService extends BaseHttpService with OauthClient {
       message = HttpConstant.NotFoundMessage)
   ))
   def findByTypeAndName: Route = {
-    secured { user =>
-      path(HttpConstant.FragmentPath / Segment / "name" / Segment) { (fragmentType, name) =>
-        authorize(hasRole(Seq("*"), user)) {
-          get {
-            complete {
-              val future = supervisor ? new FindByTypeAndName(fragmentType, name)
-              Await.result(future, timeout.duration) match {
-                case ResponseFragment(Failure(exception)) => throw exception
-                case ResponseFragment(Success(fragment)) => fragment
-              }
-            }
+    path(HttpConstant.FragmentPath / Segment / "name" / Segment) { (fragmentType, name) =>
+      get {
+        complete {
+          val future = supervisor ? new FindByTypeAndName(fragmentType, name)
+          Await.result(future, timeout.duration) match {
+            case ResponseFragment(Failure(exception)) => throw exception
+            case ResponseFragment(Success(fragment)) => fragment
           }
         }
       }
@@ -133,17 +125,13 @@ trait FragmentHttpService extends BaseHttpService with OauthClient {
       message = HttpConstant.NotFoundMessage)
   ))
   def findAllByType: Route = {
-    secured { user =>
-      path(HttpConstant.FragmentPath / Segment) { (fragmentType) =>
-        authorize(hasRole(Seq("*"), user)) {
-          get {
-            complete {
-              val future = supervisor ? new FindByType(fragmentType)
-              Await.result(future, timeout.duration) match {
-                case ResponseFragments(Failure(exception)) => throw exception
-                case ResponseFragments(Success(fragments)) => fragments
-              }
-            }
+    path(HttpConstant.FragmentPath / Segment) { (fragmentType) =>
+      get {
+        complete {
+          val future = supervisor ? new FindByType(fragmentType)
+          Await.result(future, timeout.duration) match {
+            case ResponseFragments(Failure(exception)) => throw exception
+            case ResponseFragments(Success(fragments)) => fragments
           }
         }
       }
@@ -161,17 +149,13 @@ trait FragmentHttpService extends BaseHttpService with OauthClient {
       paramType = "body")
   ))
   def create: Route = {
-    secured { user =>
-      path(HttpConstant.FragmentPath) {
-        authorize(hasRole(Seq("*"), user)) {
-          post {
-            entity(as[FragmentElementModel]) { fragment =>
-              val future = supervisor ? new Create(fragment)
-              Await.result(future, timeout.duration) match {
-                case ResponseFragment(Failure(exception)) => throw exception
-                case ResponseFragment(Success(fragment)) => complete(fragment)
-              }
-            }
+    path(HttpConstant.FragmentPath) {
+      post {
+        entity(as[FragmentElementModel]) { fragment =>
+          val future = supervisor ? new Create(fragment)
+          Await.result(future, timeout.duration) match {
+            case ResponseFragment(Failure(exception)) => throw exception
+            case ResponseFragment(Success(fragment)) => complete(fragment)
           }
         }
       }
@@ -188,18 +172,14 @@ trait FragmentHttpService extends BaseHttpService with OauthClient {
       required = true,
       paramType = "body")))
   def update: Route = {
-    secured { user =>
-      path(HttpConstant.FragmentPath) {
-        authorize(hasRole(Seq("*"), user)) {
-          put {
-            entity(as[FragmentElementModel]) { fragment =>
-              complete {
-                val future = supervisor ? new Update(fragment)
-                Await.result(future, timeout.duration) match {
-                  case Response(Success(fragment)) => HttpResponse(StatusCodes.OK)
-                  case Response(Failure(exception)) => throw exception
-                }
-              }
+    path(HttpConstant.FragmentPath) {
+      put {
+        entity(as[FragmentElementModel]) { fragment =>
+          complete {
+            val future = supervisor ? new Update(fragment)
+            Await.result(future, timeout.duration) match {
+              case Response(Success(fragment)) => HttpResponse(StatusCodes.OK)
+              case Response(Failure(exception)) => throw exception
             }
           }
         }
@@ -226,26 +206,22 @@ trait FragmentHttpService extends BaseHttpService with OauthClient {
     new ApiResponse(code = HttpConstant.NotFound, message = HttpConstant.NotFoundMessage)
   ))
   def deleteByTypeAndId: Route = {
-    secured { user =>
-      path(HttpConstant.FragmentPath / Segment / Segment) { (fragmentType, id) =>
-        authorize(hasRole(Seq("*"), user)) {
-          delete {
-            complete {
-              val policyActor = actors.get(AkkaConstant.PolicyActor).get
-              val future = supervisor ? new DeleteByTypeAndId(fragmentType, id)
-              Await.result(future, timeout.duration) match {
-                case Response(Failure(exception)) => throw exception
-                case Response(Success(_)) => {
-                  Await.result(
-                    policyActor ? FindByFragment(fragmentType, id), timeout.duration) match {
-                    case ResponsePolicies(Failure(exception)) => throw exception
-                    case ResponsePolicies(Success(policies)) => {
-                      policies.map(policy => policyActor ! Delete(policy.id.get))
-                    }
-                  }
-                  HttpResponse(StatusCodes.OK)
+    path(HttpConstant.FragmentPath / Segment / Segment) { (fragmentType, id) =>
+      delete {
+        complete {
+          val policyActor = actors.get(AkkaConstant.PolicyActor).get
+          val future = supervisor ? new DeleteByTypeAndId(fragmentType, id)
+          Await.result(future, timeout.duration) match {
+            case Response(Failure(exception)) => throw exception
+            case Response(Success(_)) => {
+              Await.result(
+                policyActor ? FindByFragment(fragmentType, id), timeout.duration) match {
+                case ResponsePolicies(Failure(exception)) => throw exception
+                case ResponsePolicies(Success(policies)) => {
+                  policies.map(policy => policyActor ! Delete(policy.id.get))
                 }
               }
+              HttpResponse(StatusCodes.OK)
             }
           }
         }

@@ -1,11 +1,11 @@
 /**
- * Copyright (C) 2016 Stratio (http://stratio.com)
+ * Copyright (C) 2015 Stratio (http://stratio.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,19 +18,20 @@ package com.stratio.sparkta.serving.api.service.http
 
 import akka.actor.ActorRef
 import akka.pattern.ask
-import com.stratio.sparkta.serving.api.actor.SparkStreamingContextActor._
-import com.stratio.sparkta.serving.api.constants.HttpConstant
-import com.stratio.sparkta.serving.core.actor.FragmentActor
-import com.stratio.sparkta.serving.core.constants.AkkaConstant
-import com.stratio.sparkta.serving.core.exception.ServingCoreException
-import com.stratio.sparkta.serving.core.helpers.PolicyHelper
-import com.stratio.sparkta.serving.core.models._
-import com.stratio.sparkta.serving.core.policy.status.PolicyStatusActor.{FindAll, Response, Update}
+import com.stratio.sparta.serving.api.actor.SparkStreamingContextActor
+import com.stratio.sparta.serving.api.constants.HttpConstant
+import com.stratio.sparta.serving.api.service.http.BaseHttpService
+import com.stratio.sparta.serving.core.actor.FragmentActor
+import com.stratio.sparta.serving.core.constants.AkkaConstant
+import com.stratio.sparta.serving.core.exception.ServingCoreException
+import com.stratio.sparta.serving.core.helpers.PolicyHelper
+import com.stratio.sparta.serving.core.models._
+import com.stratio.sparta.serving.core.policy.status.PolicyStatusActor.{FindAll, _}
 import com.wordnik.swagger.annotations._
 import spray.http.{HttpResponse, StatusCodes}
 import spray.routing._
 
-import scala.concurrent.{Future, Await}
+import scala.concurrent.Await
 import scala.util.{Failure, Success, Try}
 
 @Api(value = HttpConstant.PolicyContextPath, description = "Operations about policy contexts.", position = 0)
@@ -71,25 +72,21 @@ trait PolicyContextHttpService extends BaseHttpService {
       required = true,
       paramType = "body")))
   def update: Route = {
-    secured { user =>
-      path(HttpConstant.PolicyContextPath) {
-        authorize(hasRole(Seq("*"), user)) {
-          put {
-            entity(as[PolicyStatusModel]) { policyStatus =>
-              complete {
-                val policyStatusActor = actors.get(AkkaConstant.PolicyStatusActor).get
-                for {
-                  response <- (policyStatusActor ? Update(policyStatus)).mapTo[Option[PolicyStatusModel]]
-                } yield {
-                  if (response.isDefined)
-                    HttpResponse(StatusCodes.Created)
-                  else
-                    throw new ServingCoreException(ErrorModel.toString(
-                      ErrorModel(ErrorModel.CodeNotExistsPolicyWithId,
-                        s"No policy with id ${policyStatus.id}.")
-                    ))
-                }
-              }
+    path(HttpConstant.PolicyContextPath) {
+      put {
+        entity(as[PolicyStatusModel]) { policyStatus =>
+          complete {
+            val policyStatusActor = actors.get(AkkaConstant.PolicyStatusActor).get
+            for {
+              response <- (policyStatusActor ? Update(policyStatus)).mapTo[Option[PolicyStatusModel]]
+            } yield {
+              if (response.isDefined)
+                HttpResponse(StatusCodes.Created)
+              else
+                throw new ServingCoreException(ErrorModel.toString(
+                  ErrorModel(ErrorModel.CodeNotExistsPolicyWithId,
+                    s"No policy with id ${policyStatus.id}.")
+                ))
             }
           }
         }
@@ -111,9 +108,7 @@ trait PolicyContextHttpService extends BaseHttpService {
     Array(new ApiResponse(code = HttpConstant.NotFound,
       message = HttpConstant.NotFoundMessage)))
   def create: Route = {
-    secured { user =>
     path(HttpConstant.PolicyContextPath) {
-      authorize(hasRole(Seq("*"), user)) {
       post {
         entity(as[AggregationPoliciesModel]) { p =>
           val parsedP = getPolicyWithFragments(p)
@@ -123,7 +118,8 @@ trait PolicyContextHttpService extends BaseHttpService {
           validate(isValidAndMessageTuple._1, isValidAndMessageTuple._2) {
             complete {
               for {
-                policyResponseTry <- (supervisor ? Create(parsedP)).mapTo[Try[AggregationPoliciesModel]]
+                policyResponseTry <- (supervisor ? SparkStreamingContextActor.Create(parsedP))
+                  .mapTo[Try[AggregationPoliciesModel]]
               } yield {
                 policyResponseTry match {
                   case Success(policy) =>
@@ -137,10 +133,9 @@ trait PolicyContextHttpService extends BaseHttpService {
                 }
               }
             }
-          }}
+          }
         }
       }
-    }
     }
   }
 
