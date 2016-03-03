@@ -16,45 +16,37 @@
 
 package com.stratio.sparkta.serving.api.helpers
 
-import scala.collection.JavaConversions
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
-import akka.actor.ActorSystem
-import akka.actor.Props
+import akka.actor.{ActorSystem, Props}
 import akka.event.slf4j.SLF4JLogging
 import akka.io.IO
 import akka.routing.RoundRobinPool
+import com.stratio.sparkta.driver.factory.SparkContextFactory
+import com.stratio.sparkta.driver.service.StreamingContextService
+import com.stratio.sparkta.serving.api.actor._
+import com.stratio.sparkta.serving.api.ssl.SSLSupport
+import com.stratio.sparkta.serving.core._
+import com.stratio.sparkta.serving.core.actor.FragmentActor
+import com.stratio.sparkta.serving.core.constants.{AkkaConstant, AppConstant}
+import com.stratio.sparkta.serving.core.models.{PolicyStatusModel, SparktaSerializer}
+import com.stratio.sparkta.serving.core.policy.status.{PolicyStatusActor, PolicyStatusEnum}
 import org.apache.zookeeper.KeeperException.NoNodeException
 import org.json4s.jackson.Serialization._
 import spray.can.Http
 
-import com.stratio.sparkta.driver.factory.SparkContextFactory
-import com.stratio.sparkta.driver.service.StreamingContextService
-import com.stratio.sparkta.serving.api.actor._
-import com.stratio.sparkta.serving.core._
-import com.stratio.sparkta.serving.core.actor.FragmentActor
-import com.stratio.sparkta.serving.core.constants.AkkaConstant
-import com.stratio.sparkta.serving.core.constants.AppConstant
-import com.stratio.sparkta.serving.core.dao.ConfigDAO
-import com.stratio.sparkta.serving.core.dao.ErrorDAO
-import com.stratio.sparkta.serving.core.models.PolicyStatusModel
-import com.stratio.sparkta.serving.core.models.SparktaSerializer
-import com.stratio.sparkta.serving.core.policy.status.PolicyStatusActor
-import com.stratio.sparkta.serving.core.policy.status.PolicyStatusEnum
+import scala.collection.JavaConversions
+import scala.util.{Failure, Success, Try}
+
 
 /**
  * Helper with common operations used to create a Sparkta context used to run the application.
  */
 object SparktaHelper extends SLF4JLogging
-  with SparktaSerializer {
+  with SparktaSerializer with SSLSupport {
 
   implicit var system: ActorSystem = _
 
   /**
    * Initializes Sparkta's akka system running an embedded http server with the REST API.
-   *
    * @param appName with the name of the application.
    */
 
@@ -91,10 +83,11 @@ object SparktaHelper extends SLF4JLogging
       val controllerActor = system.actorOf(RoundRobinPool(controllerInstances)
         .props(Props(new ControllerActor(actors, curatorFramework))), AkkaConstant.ControllerActor)
 
-      IO(Http) ! Http.Bind(controllerActor, interface = SparktaConfig.apiConfig.get.getString("host"),
+      IO(Http) ! Http.Bind(controllerActor, interface = "anistal",
         port = SparktaConfig.apiConfig.get.getInt("port"))
-      IO(Http) ! Http.Bind(swaggerActor, interface = SparktaConfig.swaggerConfig.get.getString("host"),
-        port = SparktaConfig.swaggerConfig.get.getInt("port"))
+
+//      IO(Http) ! Http.Bind(swaggerActor, interface = SparktaConfig.swaggerConfig.get.getString("host"),
+//        port = SparktaConfig.swaggerConfig.get.getInt("port"))
 
       log.info("> Actors System UP!")
     } else log.info("Config for Sparkta is not defined")
