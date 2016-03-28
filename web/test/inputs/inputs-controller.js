@@ -133,7 +133,7 @@ describe('com.stratio.sparkta.inputs.inputs.controller', function () {
       scope.$digest();
 
       expect(ctrl.error).toBeTruthy();
-      expect(ctrl.errorMessage).toBe("_INPUT_ERROR_111_");
+      expect(ctrl.errorMessage).toBe("_ERROR_111_");
     }));
 
     it('Should call getInputTypes function and create an array of the amount of each input types', function () {

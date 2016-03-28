@@ -38,8 +38,9 @@ describe('policies.wizard.controller.policy-controller', function () {
       defer.resolve(fakeTemplate);
       return defer.promise;
     });
-    policyFactoryMock = jasmine.createSpyObj('PolicyFactory', ['createPolicy']);
+    policyFactoryMock = jasmine.createSpyObj('PolicyFactory', ['createPolicy', 'savePolicy']);
     policyFactoryMock.createPolicy.and.callFake(resolvedPromise);
+    policyFactoryMock.savePolicy.and.callFake(resolvedPromise);
 
     policyServiceMock = jasmine.createSpyObj('PolicyService', ['generateFinalJSON']);
 
@@ -127,7 +128,7 @@ describe('policies.wizard.controller.policy-controller', function () {
     });
   });
 
-  describe("should be able to confirm the sent of the created policy", function () {
+  describe("should be able to confirm the sent of the created or modified policy", function () {
     beforeEach(function () {
       ctrl.editionMode = false;
     });
@@ -153,11 +154,28 @@ describe('policies.wizard.controller.policy-controller', function () {
         var resolve = (modalServiceMock.openModal.calls.mostRecent().args[2]);
         expect(resolve.title()).toBe("_POLICY_._WINDOW_._CONFIRM_._TITLE_");
         expect(resolve.message()).toBe("");
+
+        ctrl.editionMode = true;
+
+        expect(modalServiceMock.openModal.calls.mostRecent().args[0]).toBe("ConfirmModalCtrl");
+        expect(modalServiceMock.openModal.calls.mostRecent().args[1]).toBe("templates/modal/confirm-modal.tpl.html");
+        var resolve = (modalServiceMock.openModal.calls.mostRecent().args[2]);
+        expect(resolve.title()).toBe("_POLICY_._WINDOW_._EDIT_._TITLE_");
+        expect(resolve.message()).toBe("");
+
+
       });
 
       it("when modal is confirmed, the policy is sent using an http request", function () {
         ctrl.confirmPolicy().then(function () {
           expect(policyFactoryMock.createPolicy).toHaveBeenCalledWith(fakeFinalPolicyJSON);
+        });
+        scope.$digest();
+
+        ctrl.editionMode = true;
+
+        ctrl.confirmPolicy().then(function () {
+          expect(policyFactoryMock.savePolicy).toHaveBeenCalledWith(fakeFinalPolicyJSON);
         });
         scope.$digest();
       });
@@ -172,13 +190,19 @@ describe('policies.wizard.controller.policy-controller', function () {
 
       it("If the policy sent fails, policy error is updated", function () {
         policyFactoryMock.createPolicy.and.callFake(rejectedPromise);
-        ctrl.confirmPolicy().then(function () {
-          expect(policyModelFactoryMock.setError).toHaveBeenCalledWith(fakeError.data);
+        ctrl.confirmPolicy().then(null, function(){
+          expect(policyModelFactoryMock.setError).toHaveBeenCalledWith("_ERROR_" + fakeError.data.i18nCode  + "_");
+        });
+        scope.$digest();
+        policyModelFactoryMock.setError.calls.reset();
+
+        policyFactoryMock.savePolicy.and.callFake(rejectedPromise);
+        ctrl.confirmPolicy().then(null, function(){
+          expect(policyModelFactoryMock.setError).toHaveBeenCalledWith("_ERROR_" + fakeError.data.i18nCode  + "_");
         });
         scope.$digest();
       });
 
     })
   });
-
 });

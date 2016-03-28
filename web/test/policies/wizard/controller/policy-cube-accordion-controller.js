@@ -152,13 +152,8 @@ describe('policies.wizard.controller.policy-cube-accordion-controller', function
   });
 
   describe("Should be able to respond to an event to force the validations of current forms", function () {
-    it("if cube array is empty, policy error is updated to 'at least one cube is needed'", function () {
-      ctrl.policy.cubes = [];
-      scope.$broadcast("forceValidateForm");
 
-      expect(policyModelFactoryMock.setError).toHaveBeenCalledWith('_CUBE_STEP_MESSAGE_');
-    });
-    it("if cube array is not empty, but user is creating a cube, policy error is updated to warn user about saving his changes'", function () {
+    it("if user is creating a cube, policy error is updated to warn user about saving his changes'", function () {
       ctrl.policy.cubes = [fakeCube];
       ctrl.isActiveCubeCreationPanel.and.returnValue(true);
 

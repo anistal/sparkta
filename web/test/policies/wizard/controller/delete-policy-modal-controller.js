@@ -60,7 +60,7 @@ describe('policies.wizard.controller.delete-policy-modal-controller', function (
       policyFactoryMock.deletePolicy.and.callFake(rejectedPromise);
       ctrl.ok().then(function () {
         expect(ctrl.error).toBeTruthy();
-        expect(ctrl.errorText).toBe("_INPUT_ERROR_" + fakeError.data.i18nCode + "_");
+        expect(ctrl.errorText).toBe("_ERROR_" + fakeError.data.i18nCode + "_");
       });
       scope.$digest();
     });

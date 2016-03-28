@@ -53,7 +53,7 @@
 
         },function (error) {
           vm.error = true
-          vm.errorMessage = "_INPUT_ERROR_" + error.data.i18nCode + "_";;
+          vm.errorMessage = "_ERROR_" + error.data.i18nCode + "_";;
         });
 
       }

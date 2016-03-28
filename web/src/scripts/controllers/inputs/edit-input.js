@@ -174,7 +174,7 @@
 
       if (inputNamesExisting.length > 0 && inputNamesExisting[0].name !== vm.originalName) {
         vm.error = true;
-        vm.errorText = "_INPUT_ERROR_100_";
+        vm.errorText = "_ERROR_100_";
       }
       else {
         editFragment();
@@ -193,7 +193,7 @@
 
       }, function (error) {
         vm.error = true;
-        vm.errorText = "_INPUT_ERROR_" + error.data.i18nCode + "_";
+        vm.errorText = "_ERROR_" + error.data.i18nCode + "_";
       });
     }
 

@@ -1,0 +1,11 @@
+<aside>
+  <div data-ng-if="msg.text" class="c-msg c-msg--small c-msg--{{type}} c-col--12" data-qa="{{type}}-msg">
+    <i class="c-icon c-icon--is-clickable icon-circle-cross" data-ng-click="onClickCloseError()"></i>
+    <span>{{msg.text | translate}}</span>
+    <ul data-ng-if="msg.subErrorModels" data-ng-repeat="subError in msg.subErrorModels">
+      <li>{{subError.i18nCode | translate}}
+      </li>
+    </ul>
+    <span data-ng-if = "msg.internalTrace">{{msg.internalTrace}}</span>
+  </div>
+</aside>
