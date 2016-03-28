@@ -110,11 +110,7 @@
           defer.resolve();
         }, function (error) {
           if (error) {
-            if (error.data.message) {
-              PolicyModelFactory.setError(error.data.message);
-            }
-            else
-              PolicyModelFactory.setError(error.data);
+            PolicyModelFactory.setError("_POLICY_ERROR_" + error.data.i18nCode  + "_");
           }
           defer.reject();
         });
@@ -147,10 +143,14 @@
         if (vm.editionMode) {
           PolicyFactory.savePolicy(finalJSON).then(function () {
             defer.resolve();
+          }, function (error) {
+            defer.reject(error);
           });
         } else {
           PolicyFactory.createPolicy(finalJSON).then(function () {
             defer.resolve();
+          }, function (error) {
+            defer.reject(error);
           });
         }
       });
