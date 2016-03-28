@@ -16,14 +16,13 @@
 package com.stratio.sparta.serving.api.service.handler
 
 import akka.event.slf4j.SLF4JLogging
+import com.stratio.sparta.serving.core.exception.ServingCoreException
+import com.stratio.sparta.serving.core.models.{ErrorModel, SpartaSerializer}
 import org.json4s.jackson.Serialization._
 import spray.http.StatusCodes
 import spray.routing.ExceptionHandler
 import spray.routing.directives.{MiscDirectives, RouteDirectives}
 import spray.util.LoggingContext
-
-import com.stratio.sparta.serving.core.exception.ServingCoreException
-import com.stratio.sparta.serving.core.models.{ErrorModel, SpartaSerializer}
 
 /**
  * This exception handler will be used by all our services to return a [ErrorModel] that will be used by the frontend.
