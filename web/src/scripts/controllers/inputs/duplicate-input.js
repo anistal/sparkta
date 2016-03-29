@@ -59,7 +59,7 @@
 
           if (fragmentNamesExisting.length > 0) {
             vm.error = true;
-            vm.errorText = "_INPUT_ERROR_100_";
+            vm.errorText = "_ERROR_100_";
           }
           else {
             createfragment();
@@ -75,7 +75,7 @@
 
             },function (error) {
                 vm.error = true;
-                vm.errorText = "_INPUT_ERROR_" + error.data.i18nCode + "_";
+                vm.errorText = "_ERROR_" + error.data.i18nCode + "_";
             });
         };
 
