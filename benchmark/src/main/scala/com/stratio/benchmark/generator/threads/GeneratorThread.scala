@@ -42,15 +42,36 @@ class GeneratorThread(producer: Producer[String,String], timeout: Long, stoppedT
 
   private def generateRaw(startTimeInMillis: Long): Unit = {
     while(((startTimeInMillis + timeout) - new Date().getTime) > 0) {
-      val id = UUID.randomUUID.toString
-      val timestamp = RawModel.generateTimestamp
-      val clientId = RawModel.generateRandomInt(RawModel.Range_client_id._1, RawModel.Range_client_id._2)
+
+
       val latitude = clientIdGeo.get(clientId).get._1
       val longitude = clientIdGeo.get(clientId).get._2
-      val paymentMethod = RawModel.generatePaymentMethod()
-      val creditCard = clientIdCreditCard.get(clientId).get
-      val shoppingCenter = RawModel.generateShoppingCenter()
-      val employee = RawModel.generateRandomInt(RawModel.Range_employee._1, RawModel.Range_employee._2)
+
+      val sessionid = UUID.randomUUID.toString
+      val family = UUID.randomUUID.toString
+      val model = UUID.randomUUID.toString
+      val version = UUID.randomUUID.toString
+      val command = UUID.randomUUID.toString
+      val phaseid = UUID.randomUUID.toString
+      val timestamp = new Date().getTime
+      val panelid = UUID.randomUUID.toString
+      val country = UUID.randomUUID.toString
+      val coverage = UUID.randomUUID.toString
+      val coveragecategory = UUID.randomUUID.toString
+      val coveragetype = UUID.randomUUID.toString
+      val carrier = UUID.randomUUID.toString
+      val lat = UUID.randomUUID.toString
+      val lng = UUID.randomUUID.toString
+      val content = UUID.randomUUID.toString
+      val coveragemandatory = UUID.randomUUID.toString
+      val texto = UUID.randomUUID.toString
+      val codpostal = UUID.randomUUID.toString
+      val year = UUID.randomUUID.toString
+      val month = UUID.randomUUID.toString
+      val day = UUID.randomUUID.toString
+      val hour = UUID.randomUUID.toString
+
+
 
       val rawModel = new RawModel(
         id,

@@ -53,11 +53,11 @@ object GeneratorRunner extends HttpUtil {
 
     Try(ConfigFactory.parseFile(new File(args(0)))) match {
       case Success(config) =>
-        preCleanup(config)
-        val policyId = generatePost(config)
+//        preCleanup(config)
+//        val policyId = generatePost(config)
         generateEvents(config)
-        generateReports(config)
-        postCleanup(policyId, config)
+//        generateReports(config)
+//        postCleanup(policyId, config)
       case Failure(exception) =>
         logger.error(exception.getLocalizedMessage, exception)
     }
